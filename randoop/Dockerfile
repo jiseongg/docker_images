@@ -1,15 +1,14 @@
-FROM jiseongg301/java_base as base
-
-LABEL maintainer="jiseongg"
-USER jiseongg
-
-ENV JAVA_HOME /usr/java/openjdk-11
+FROM maven:3.8.1-openjdk-11 as build
 
 # Build Randop
-WORKDIR /home/jiseongg/tools
-RUN git clone https://github.com/randoop/randoop -b v4.3.0 --depth 1 --quiet && \
+WORKDIR /tmp
+RUN git clone http://github.com/randoop/randoop -b v4.3.0 --depth 1 --quiet && \
     cd randoop && \
-    ./gradlew assemble -x test
+    ./gradlew assemble -x test && \
+    mkdir -p /tools/randoop && \
+    mv build/libs/randoop-all*.jar /tools/randoop/randoop.jar
 
-# Reset JAVA_HOME to Java 15
-ENV JAVA_HOME /usr/java/openjdk-15
+# Setup path
+FROM openjdk:11-jdk as randoop
+WORKDIR /tools/randoop
+COPY --from=build /tools/randoop/randoop.jar .
