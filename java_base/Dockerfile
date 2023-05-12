@@ -6,20 +6,22 @@ COPY --from=java11 /usr/local/openjdk-11 /usr/java/openjdk-11
 
 RUN microdnf install jq tmux vim ctags python3-pip wget procps
 
-# Install java 7
-WORKDIR /tmp
-ARG JAVA7_URL="https://download.java.net/openjdk/jdk7u75/ri/jdk_ri-7u75-b13-linux-x64-18_dec_2014.tar.gz"
-RUN curl -o openjdk-7.tar.gz ${JAVA7_URL}
-RUN mkdir -p /usr/java/openjdk-7 && \
-      tar xf /tmp/openjdk-7.tar.gz -C /usr/java/openjdk-7 --strip-components 1
-
+### Java experiment environment
 # Setup JDKs
-RUN echo "alias setJava7='export JAVA_HOME=/usr/java/openjdk-7 && export PATH=\${JAVA_HOME}/bin:\${PATH}'" >> /root/.bashrc
 RUN echo "alias setJava8='export JAVA_HOME=/usr/java/openjdk-8 && export PATH=\${JAVA_HOME}/bin:\${PATH}'" >> /root/.bashrc
 RUN echo "alias setJava11='export JAVA_HOME=/usr/java/openjdk-11 && export PATH=\${JAVA_HOME}/bin:\${PATH}'" >> /root/.bashrc
 RUN echo "alias setJava15='export JAVA_HOME=/usr/java/openjdk-15 && export PATH=\${JAVA_HOME}/bin:\${PATH}'" >> /root/.bashrc
 
-# Install packages and setup
+# junit test driver
+WORKDIR /tools/junit
+RUN wget https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar -O junit.jar
+RUN wget https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar -O hamcrest-core.jar
+
+# pandas
+RUN pip3 install pandas
+
+
+###  Miscellaneous setup
 WORKDIR /tmp
 COPY configs /tmp/configs
 
@@ -34,9 +36,6 @@ RUN cat configs/tmux.conf >> /root/.tmux.conf
 # bashrc
 RUN cat configs/bashrc >> /root/.bashrc
 RUN rm -rf /tmp/configs
-
-# pandas
-RUN pip3 install pandas
 
 # disable maven-default-http-blocker
 WORKDIR /tmp/scripts
